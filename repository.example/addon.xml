@@ -1431,7 +1431,7 @@
       </tr>
       <tr>
         <td id="L2" class="blob-num js-line-number" data-line-number="2"></td>
-        <td id="LC2" class="blob-code blob-code-inner js-file-line">&lt;<span class="pl-ent">addon</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>ADDON_ID_HERE<span class="pl-pds">&quot;</span></span> <span class="pl-e">name</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>REPO_NAME_HERE<span class="pl-pds">&quot;</span></span> <span class="pl-e">version</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>VERSION_NUMBER_HERE<span class="pl-pds">&quot;</span></span> <span class="pl-e">provider-name</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>YOUR_USERNAME_HERE<span class="pl-pds">&quot;</span></span>&gt;</td>
+        <td id="LC2" class="blob-code blob-code-inner js-file-line">&lt;<span class="pl-ent">addon</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>ADDON_ID_HERE<span class="pl-pds">&quot;</span></span> <span class="pl-e">name</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>REPO_NAME_HERE<span class="pl-pds">&quot;</span></span> <span class="pl-e">version</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>VERSION_NUMBER_HERE<span class="pl-pds">&quot;</span></span> <span class="pl-e">provider-name</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>cmf235<span class="pl-pds">&quot;</span></span>&gt;</td>
       </tr>
       <tr>
         <td id="L3" class="blob-num js-line-number" data-line-number="3"></td>
@@ -1443,15 +1443,15 @@
       </tr>
       <tr>
         <td id="L5" class="blob-num js-line-number" data-line-number="5"></td>
-        <td id="LC5" class="blob-code blob-code-inner js-file-line">            &lt;<span class="pl-ent">info</span> <span class="pl-e">compressed</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>false<span class="pl-pds">&quot;</span></span>&gt;https://raw.githubusercontent.com/YOUR_USERNAME_HERE/REPOSITORY_NAME_HERE/BRANCH_NAME_HERE/zips/addons.xml&lt;/<span class="pl-ent">info</span>&gt;</td>
+        <td id="LC5" class="blob-code blob-code-inner js-file-line">            &lt;<span class="pl-ent">info</span> <span class="pl-e">compressed</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>false<span class="pl-pds">&quot;</span></span>&gt;https://raw.githubusercontent.com/cmf235/cmf235/BRANCH_NAME_HERE/zips/addons.xml&lt;/<span class="pl-ent">info</span>&gt;</td>
       </tr>
       <tr>
         <td id="L6" class="blob-num js-line-number" data-line-number="6"></td>
-        <td id="LC6" class="blob-code blob-code-inner js-file-line">            &lt;<span class="pl-ent">checksum</span>&gt;https://raw.githubusercontent.com/YOUR_USERNAME_HERE/REPOSITORY_NAME_HERE/BRANCH_NAME_HERE/zips/addons.xml.md5&lt;/<span class="pl-ent">checksum</span>&gt;</td>
+        <td id="LC6" class="blob-code blob-code-inner js-file-line">            &lt;<span class="pl-ent">checksum</span>&gt;https://raw.githubusercontent.com/cmf235/cmf235/BRANCH_NAME_HERE/zips/addons.xml.md5&lt;/<span class="pl-ent">checksum</span>&gt;</td>
       </tr>
       <tr>
         <td id="L7" class="blob-num js-line-number" data-line-number="7"></td>
-        <td id="LC7" class="blob-code blob-code-inner js-file-line">            &lt;<span class="pl-ent">datadir</span> <span class="pl-e">zip</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>true<span class="pl-pds">&quot;</span></span>&gt;https://raw.githubusercontent.com/YOUR_USERNAME_HERE/REPOSITORY_NAME_HERE/BRANCH_NAME_HERE/zips/&lt;/<span class="pl-ent">datadir</span>&gt;</td>
+        <td id="LC7" class="blob-code blob-code-inner js-file-line">            &lt;<span class="pl-ent">datadir</span> <span class="pl-e">zip</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>true<span class="pl-pds">&quot;</span></span>&gt;https://raw.githubusercontent.com/cmf235/cmf235/BRANCH_NAME_HERE/zips/&lt;/<span class="pl-ent">datadir</span>&gt;</td>
       </tr>
       <tr>
         <td id="L8" class="blob-num js-line-number" data-line-number="8"></td>
@@ -1471,7 +1471,7 @@
       </tr>
       <tr>
         <td id="L12" class="blob-num js-line-number" data-line-number="12"></td>
-        <td id="LC12" class="blob-code blob-code-inner js-file-line">        &lt;<span class="pl-ent">description</span>&gt;DESCRIPTION OF YOUR REPO HERE&lt;/<span class="pl-ent">description</span>&gt;</td>
+        <td id="LC12" class="blob-code blob-code-inner js-file-line">        &lt;<span class="pl-ent">description</span>&gt;Chad's Helper Repository&lt;/<span class="pl-ent">description</span>&gt;</td>
       </tr>
       <tr>
         <td id="L13" class="blob-num js-line-number" data-line-number="13"></td>
