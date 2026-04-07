@@ -409,8 +409,9 @@ function parseDeployedCSV(csvText) {
       currentFleet = fleetMatch[1];
       const parts = col0.split('-');
       const customer = parts[0] ? parts[0].trim() : '';
+      const pad = (row[1] || '').toString().trim(); /* Pad name is in col[1] */
       if (!fleetEquip[currentFleet]) fleetEquip[currentFleet] = [];
-      fleetMeta[currentFleet] = { customer: customer, pad: '' };
+      fleetMeta[currentFleet] = { customer: customer, pad: pad };
       continue;
     }
 
@@ -442,9 +443,12 @@ function parseRebuildCSV(csvText) {
     const rebuild = parseInt(row[8], 10);
     const machine = parseInt(row[9], 10);
     const notStarted = parseInt(row[10], 10);
+    /* Filter out header rows, metadata rows like "DATE UPDATED", and rows with invalid numbers */
     if (typeName && !isNaN(total) && total > 0 &&
-        !typeName.match(/equipment\s*in\s*rebuild/i) && !typeName.match(/^type$/i)) {
-      rebuildData.push({ type: typeName, total, complete, paint, rebuild, machine, notStarted });
+        !typeName.match(/equipment\s*in\s*rebuild/i) && !typeName.match(/^type$/i) &&
+        !typeName.match(/date\s*updated/i) && !typeName.match(/^edit$/i) &&
+        !isNaN(complete) && !isNaN(paint) && !isNaN(rebuild) && !isNaN(machine) && !isNaN(notStarted)) {
+      rebuildData.push({ type: typeName, total, complete: complete||0, paint: paint||0, rebuild: rebuild||0, machine: machine||0, notStarted: notStarted||0 });
     }
   }
   return rebuildData;
@@ -550,41 +554,19 @@ async function fetchAllData() {
   ts.textContent = 'Refreshing...';
 
   try {
-    /* Build fleet tab URLs */
-    const fleetTabUrls = {};
-    Object.keys(FLEET_TABS).forEach(fid => {
-      fleetTabUrls[fid] = `https://docs.google.com/spreadsheets/d/${FLEET_SHEET_ID}/export?format=csv&sheet=${FLEET_TABS[fid]}`;
-    });
-
-    /* Fetch all data sources in parallel */
-    const promises = [
+    /* Fetch deployed + rebuild data in parallel (fleet tracker tabs are calendars, not data) */
+    const [deployedCSV, rebuildCSV] = await Promise.all([
       fetchCSV(CSV_URLS.deployed),
       fetchCSV(CSV_URLS.rebuild),
-      ...Object.keys(fleetTabUrls).map(fid => fetchCSV(fleetTabUrls[fid]).then(csv => ({ fid, csv })))
-    ];
-    const results = await Promise.all(promises);
+    ]);
 
-    /* Parse deployed equipment */
-    const deployedResult = parseDeployedCSV(results[0]);
+    /* Parse deployed equipment — includes fleet, customer, pad, and equipment data */
+    const deployedResult = parseDeployedCSV(deployedCSV);
     FLEET_EQUIPMENT = deployedResult.fleetEquip;
     FLEET_META = deployedResult.fleetMeta;
 
     /* Parse rebuild data */
-    REBUILD_DATA = parseRebuildCSV(results[1]);
-
-    /* Parse fleet tracker tabs */
-    FLEET_INFO = {};
-    for (let i = 2; i < results.length; i++) {
-      const { fid, csv } = results[i];
-      FLEET_INFO[fid] = parseFleetTabCSV(csv, fid);
-      /* Enrich FLEET_META with pad info from fleet tracker */
-      if (FLEET_INFO[fid].currentPad.pad && FLEET_META[fid]) {
-        FLEET_META[fid].pad = FLEET_INFO[fid].currentPad.pad;
-      }
-      if (FLEET_INFO[fid].currentPad.customer && FLEET_META[fid]) {
-        FLEET_META[fid].customer = FLEET_INFO[fid].currentPad.customer || FLEET_META[fid].customer;
-      }
-    }
+    REBUILD_DATA = parseRebuildCSV(rebuildCSV);
 
     /* Render all sections */
     renderDashboard();
