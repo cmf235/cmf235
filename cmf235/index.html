@@ -17,9 +17,15 @@
     .header-title { display: flex; flex-direction: column; gap: 2px; }
     .header-main { font-size: 16px; font-weight: 700; color: #FFFFFF; letter-spacing: 3px; text-transform: uppercase; }
     .header-sub { font-size: 13px; color: #94A3B8; }
-    .header-right { display: flex; align-items: center; gap: 12px; color: #94A3B8; font-size: 13px; }
+    .header-right { display: flex; align-items: center; gap: 16px; color: #94A3B8; font-size: 13px; }
+    .refresh-info { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+    .refresh-timestamp { font-size: 12px; }
+    .refresh-countdown { font-size: 11px; color: #64748B; }
     .refresh-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 8px; cursor: pointer; color: #94A3B8; transition: all 0.2s; }
     .refresh-btn:hover { background: rgba(255,255,255,0.15); color: #FFFFFF; }
+    .loading-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10B981; margin-right: 6px; animation: pulse 1.5s ease-in-out infinite; }
+    .loading-dot.error { background: #EF4444; animation: none; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
     /* ── TAB NAV ── */
     .tab-nav { background: #FFFFFF; border-bottom: 2px solid #E2E8F0; padding: 0 32px; display: flex; gap: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -168,8 +174,11 @@
       </div>
     </div>
     <div class="header-right">
-      <span>Last updated: April 1, 2026</span>
-      <button class="refresh-btn"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 2.5a6.5 6.5 0 1 0 1.5 5m-1.5-5l-1.5 1.5m0-1.5l1.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+      <div class="refresh-info">
+        <span class="refresh-timestamp"><span class="loading-dot" id="status-dot"></span><span id="last-updated">Loading...</span></span>
+        <span class="refresh-countdown" id="countdown">Next refresh in 5:00</span>
+      </div>
+      <button class="refresh-btn" onclick="fetchAllData()" title="Refresh now"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 2.5a6.5 6.5 0 1 0 1.5 5m-1.5-5l-1.5 1.5m0-1.5l1.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
     </div>
   </header>
 
@@ -182,19 +191,10 @@
   </div>
 
   <div class="container">
-    <!-- ═══ DEPLOYED EQUIPMENT ═══ -->
+    <!-- DEPLOYED EQUIPMENT -->
     <div class="tab-content active" id="deployed">
-      <div class="kpi-row">
-        <div class="kpi-pill">Fleet 1 &bull; EQT &bull; FRANKLIN DENNY</div>
-        <div class="kpi-pill">Fleet 6 &bull; CNX &bull; WDTN18</div>
-        <div class="kpi-pill">Fleet 9 &bull; EOG &bull; DEERSVILLE</div>
-        <div class="kpi-pill">Fleet 10 &bull; EQT &bull; LETO</div>
-        <div class="kpi-pill">Fleet 13 &bull; EQT &bull; COP TRACT B</div>
-        <div class="kpi-pill">Fleet 15 &bull; NNE &bull; ERP</div>
-      </div>
-
+      <div class="kpi-row" id="fleet-pills"></div>
       <div class="grid-3" id="fleet-cards-grid"></div>
-
       <div class="card" style="margin-top: 32px;">
         <div class="card-header slate">
           <div class="card-header-title"><svg class="card-header-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10a8 8 0 1116 0 8 8 0 01-16 0zm8-3a1 1 0 00-.867.5 1 1 0 01-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2z"/></svg>Fleet Equipment Totals</div>
@@ -205,15 +205,9 @@
       </div>
     </div>
 
-    <!-- ═══ EQUIPMENT IN REBUILD ═══ -->
+    <!-- EQUIPMENT IN REBUILD -->
     <div class="tab-content" id="rebuild">
-      <div class="kpi-row">
-        <div class="kpi-card"><div class="kpi-value">252</div><div class="kpi-label">Total Items</div></div>
-        <div class="kpi-card"><div class="kpi-value">39</div><div class="kpi-label">Completed</div></div>
-        <div class="kpi-card"><div class="kpi-value">174</div><div class="kpi-label">In Progress</div></div>
-        <div class="kpi-card"><div class="kpi-value">39</div><div class="kpi-label">Not Started</div></div>
-      </div>
-
+      <div class="kpi-row" id="rebuild-kpis"></div>
       <div class="card">
         <div class="card-header orange">
           <div class="card-header-title"><svg class="card-header-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>Rebuild Status by Equipment Type</div>
@@ -225,7 +219,6 @@
           </table>
         </div>
       </div>
-
       <div class="card" style="margin-top: 32px;">
         <div class="card-header purple">
           <div class="card-header-title"><svg class="card-header-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>Rebuild Progress by Equipment Type</div>
@@ -236,7 +229,7 @@
       </div>
     </div>
 
-    <!-- ═══ AVAILABLE EQUIPMENT ═══ -->
+    <!-- AVAILABLE EQUIPMENT -->
     <div class="tab-content" id="available">
       <div class="card">
         <div class="card-header teal">
@@ -249,7 +242,6 @@
           </table>
         </div>
       </div>
-
       <div class="card" style="margin-top: 32px;">
         <div class="card-header blue">
           <div class="card-header-title"><svg class="card-header-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>Equipment Status Overview</div>
@@ -260,15 +252,9 @@
       </div>
     </div>
 
-    <!-- ═══ ASSET SUMMARY ═══ -->
+    <!-- ASSET SUMMARY -->
     <div class="tab-content" id="summary">
-      <div class="kpi-row">
-        <div class="kpi-card"><div class="kpi-value">397</div><div class="kpi-label">Total Deployed</div></div>
-        <div class="kpi-card"><div class="kpi-value">252</div><div class="kpi-label">In Rebuild</div></div>
-        <div class="kpi-card"><div class="kpi-value">6</div><div class="kpi-label">Active Fleets</div></div>
-        <div class="kpi-card"><div class="kpi-value">4</div><div class="kpi-label">Active Customers</div></div>
-      </div>
-
+      <div class="kpi-row" id="summary-kpis"></div>
       <div class="chart-row">
         <div class="card">
           <div class="card-header emerald"><div class="card-header-title">Equipment Distribution</div></div>
@@ -279,24 +265,15 @@
           <div class="card-body"><div class="chart-container"><canvas id="progress-chart"></canvas></div></div>
         </div>
       </div>
-
       <div class="card">
         <div class="card-header blue"><div class="card-header-title">Equipment per Fleet</div></div>
         <div class="card-body"><div class="chart-container"><canvas id="fleet-summary-chart"></canvas></div></div>
       </div>
     </div>
 
-    <!-- ═══ SERVICE CALENDAR ═══ -->
+    <!-- SERVICE CALENDAR -->
     <div class="tab-content" id="calendar">
-      <div class="grid-3" style="margin-bottom: 40px;">
-        <div class="fleet-card"><div class="fleet-card-top f1"><div class="fleet-card-header">Fleet 1</div></div><div class="fleet-card-content"><div class="fleet-manager"><div class="fleet-manager-name">Brandon Dock</div><div class="fleet-manager-contact">Brandon.Dock@evolutionws.com</div><div class="fleet-manager-contact">570.713.5407</div></div><div class="fleet-section"><div class="fleet-section-title">Current Pad</div><div class="fleet-section-value">EQT &bull; Big 177</div><div class="fleet-manager-contact">Rig Down: 04/01/2026</div></div><div class="fleet-section"><div class="fleet-section-title">Upcoming Pad</div><div class="fleet-section-value">EQT &bull; Shale Nail</div><div class="fleet-manager-contact">Rig Up: 04/01/2026</div></div></div></div>
-        <div class="fleet-card"><div class="fleet-card-top f6"><div class="fleet-card-header">Fleet 6</div></div><div class="fleet-card-content"><div class="fleet-manager"><div class="fleet-manager-name">Lindsay Riley</div><div class="fleet-manager-contact">Lindsay.Riley@evolutionws.com</div><div class="fleet-manager-contact">304.613.0180</div></div><div class="fleet-section"><div class="fleet-section-title">Current Pad</div><div class="fleet-section-value">CNX &bull; WDTN-18</div><div class="fleet-manager-contact">Rig Down: TBD</div></div><div class="fleet-section"><div class="fleet-section-title">Upcoming Pad</div><div class="fleet-section-value">CNX &bull; MAJ8</div><div class="fleet-manager-contact">Rig Up: TBD</div></div></div></div>
-        <div class="fleet-card"><div class="fleet-card-top f9"><div class="fleet-card-header">Fleet 9</div></div><div class="fleet-card-content"><div class="fleet-manager"><div class="fleet-manager-name">Eric Cronberg</div><div class="fleet-manager-contact">Eric.Cronberg@evolutionws.com</div><div class="fleet-manager-contact">303.507.3985</div></div><div class="fleet-section"><div class="fleet-section-title">Current Pad</div><div class="fleet-section-value">EOG &bull; Deersville</div><div class="fleet-manager-contact">Rig Down: 04/05/2026</div></div><div class="fleet-section"><div class="fleet-section-title">Upcoming Pad</div><div class="fleet-section-value">EOG &bull; Navy Pad</div><div class="fleet-manager-contact">Rig Up: 04/04/2026</div></div></div></div>
-        <div class="fleet-card"><div class="fleet-card-top f10"><div class="fleet-card-header">Fleet 10</div></div><div class="fleet-card-content"><div class="fleet-manager"><div class="fleet-manager-name">Corey Miller</div><div class="fleet-manager-contact">Corey.Miller@evolutionws.com</div><div class="fleet-manager-contact">346.459.4404</div></div><div class="fleet-section"><div class="fleet-section-title">Current Pad</div><div class="fleet-section-value">EQT &bull; LETO</div><div class="fleet-manager-contact">Rig Down: 05/24/2026</div></div><div class="fleet-section"><div class="fleet-section-title">Upcoming Pad</div><div class="fleet-section-value">EQT &bull; TBD</div><div class="fleet-manager-contact">Rig Up: TBD</div></div></div></div>
-        <div class="fleet-card"><div class="fleet-card-top f13"><div class="fleet-card-header">Fleet 13</div></div><div class="fleet-card-content"><div class="fleet-manager"><div class="fleet-manager-name">Ryan Poorman</div><div class="fleet-manager-contact">Ryan.Poorman@evolutionws.com</div><div class="fleet-manager-contact">832.610.4125</div></div><div class="fleet-section"><div class="fleet-section-title">Current Pad</div><div class="fleet-section-value">EQT &bull; COP - A</div><div class="fleet-manager-contact">Rig Down: 04/01/2026</div></div><div class="fleet-section"><div class="fleet-section-title">Upcoming Pad</div><div class="fleet-section-value">EQT &bull; COP - B</div><div class="fleet-manager-contact">Rig Up: 03/22/2026</div></div></div></div>
-        <div class="fleet-card"><div class="fleet-card-top f15"><div class="fleet-card-header">Fleet 15</div></div><div class="fleet-card-content"><div class="fleet-manager"><div class="fleet-manager-name">Jeremy Bower</div><div class="fleet-manager-contact">jeremy.bower@evolutionws.com</div><div class="fleet-manager-contact">570.772.9235</div></div><div class="fleet-section"><div class="fleet-section-title">Current Pad</div><div class="fleet-section-value">NNE &bull; ERP</div><div class="fleet-manager-contact">Rig Down: 05/09/2026</div></div><div class="fleet-section"><div class="fleet-section-title">Upcoming Pad</div><div class="fleet-section-value">NNE &bull; Miracle</div><div class="fleet-manager-contact">Rig Up: 05/10/2026</div></div></div></div>
-      </div>
-
+      <div class="grid-3" id="fleet-info-grid" style="margin-bottom: 40px;"></div>
       <div class="calendar-section">
         <div class="calendar-header">
           <h3 style="font-size: 20px; font-weight: 700; color: #0F172A;">Service Calendar</h3>
@@ -306,14 +283,12 @@
             <button id="calendar-next">Next &rarr;</button>
           </div>
         </div>
-
         <div class="calendar-grid">
           <div class="weekdays">
             <div class="weekday">Mon</div><div class="weekday">Tue</div><div class="weekday">Wed</div><div class="weekday">Thu</div><div class="weekday">Fri</div><div class="weekday">Sat</div><div class="weekday">Sun</div>
           </div>
           <div class="days" id="calendar-days"></div>
         </div>
-
         <div class="calendar-legend">
           <div class="legend-item"><div class="legend-color" style="background:#EF4444;"></div><span>RIG DOWN</span></div>
           <div class="legend-item"><div class="legend-color" style="background:#F97316;"></div><span>RD LOGISTICS</span></div>
@@ -325,75 +300,433 @@
     </div>
   </div>
 
-  <footer>Data snapshot: April 1, 2026 &bull; Evolution Well Services</footer>
+  <footer>Live data from Google Sheets &bull; Auto-refreshes every 5 minutes &bull; Evolution Well Services</footer>
 
   <script>
-const FLEET_EQUIPMENT = {"1":[{type:"2 Foot Spools",count:9},{type:"3 Foot Spools",count:1},{type:"8 Foot Spools",count:10},{type:"10 Foot Spools",count:8},{type:"Mini Blocks",count:3},{type:"MLB",count:4},{type:"45s",count:4},{type:"Densos",count:1},{type:'TSI 7" Check Valves',count:1},{type:"Extension Skids",count:8},{type:"Mini Extension Skids",count:3},{type:"Complete POD Assembly",count:8},{type:"H4",count:8}],"6":[{type:"2 Foot Spools",count:10},{type:"4 Foot Spools",count:1},{type:"8 Foot Spools",count:5},{type:"10 Foot Spools",count:4},{type:"20 Foot Spools",count:1},{type:"Mini Blocks",count:3},{type:"MLB",count:4},{type:"45s",count:4},{type:"Densos",count:1},{type:'TSI 7" Check Valves',count:1},{type:"Extension Skids",count:8},{type:"Mini Extension Skids",count:3},{type:"Complete POD Assembly",count:8},{type:"H4",count:8}],"9":[{type:"16 Inch Spools",count:3},{type:"2 Foot Spools",count:6},{type:"4 Foot Spools",count:1},{type:"6 Foot Spools",count:1},{type:"8 Foot Spools",count:13},{type:"10 Foot Spools",count:2},{type:"3 Way Blocks",count:1},{type:"Mini Blocks",count:3},{type:"MLB",count:4},{type:"45s",count:4},{type:"7 to 3 Inch Flanges",count:2},{type:"7 Inch Blind Flanges",count:1},{type:"Densos",count:1},{type:'TSI 7" Check Valves',count:1},{type:"Extension Skids",count:8},{type:"Mini Extension Skids",count:3},{type:"Complete POD Assembly",count:8},{type:"H4",count:8}],"10":[{type:"2 Foot Spools",count:10},{type:"8 Foot Spools",count:3},{type:"10 Foot Spools",count:2},{type:"Mini Blocks",count:3},{type:"MLB",count:4},{type:"45s",count:4},{type:"7 Inch Blind Flanges",count:1},{type:"Densos",count:1},{type:'TSI 7" Check Valves',count:1},{type:"Extension Skids",count:8},{type:"Mini Extension Skids",count:3},{type:"Complete POD Assembly",count:8},{type:"H4",count:8}],"13":[{type:"2 Foot Spools",count:11},{type:"3 Foot Spools",count:1},{type:"4 Foot Spools",count:1},{type:"6 Foot Spools",count:1},{type:"8 Foot Spools",count:13},{type:"10 Foot Spools",count:2},{type:"3 Way Blocks",count:1},{type:"Mini Blocks",count:3},{type:"MLB",count:4},{type:"45s",count:4},{type:"7 to 3 Inch Flanges",count:2},{type:"Densos",count:1},{type:'TSI 7" Check Valves',count:1},{type:"Extension Skids",count:8},{type:"Mini Extension Skids",count:3},{type:"Complete POD Assembly",count:8},{type:"H4",count:8}],"15":[{type:"2 Foot Spools",count:9},{type:"3 Foot Spools",count:1},{type:"8 Foot Spools",count:10},{type:"10 Foot Spools",count:8},{type:"Mini Blocks",count:3},{type:"MLB",count:4},{type:"45s",count:4},{type:"7 Inch Blind Flanges",count:1},{type:"Densos",count:1},{type:'TSI 7" Check Valves',count:1},{type:"Extension Skids",count:8},{type:"Mini Extension Skids",count:3},{type:"Complete POD Assembly",count:8},{type:"H4",count:8}]};
-const REBUILD_DATA = [{type:"16 Inch Spools",total:4,complete:2,paint:0,rebuild:1,machine:0,notStarted:1},{type:"2 Foot Spools",total:12,complete:6,paint:4,rebuild:0,machine:2,notStarted:0},{type:"3 Foot Spools",total:4,complete:1,paint:0,rebuild:3,machine:0,notStarted:0},{type:"4 Foot Spools",total:22,complete:1,paint:0,rebuild:11,machine:0,notStarted:10},{type:"6 Foot Spools",total:11,complete:0,paint:0,rebuild:11,machine:0,notStarted:0},{type:"8 Foot Spools",total:66,complete:0,paint:13,rebuild:53,machine:0,notStarted:0},{type:"10 Foot Spools",total:8,complete:0,paint:0,rebuild:2,machine:4,notStarted:2},{type:"3 Way Blocks",total:6,complete:0,paint:4,rebuild:1,machine:1,notStarted:0},{type:"4 Way Blocks",total:20,complete:6,paint:6,rebuild:3,machine:0,notStarted:5},{type:"Mini Blocks",total:8,complete:0,paint:2,rebuild:4,machine:2,notStarted:0},{type:"MLB",total:11,complete:0,paint:0,rebuild:7,machine:4,notStarted:0},{type:"45s",total:8,complete:0,paint:0,rebuild:0,machine:0,notStarted:8},{type:"7 to 3 Inch Flanges",total:6,complete:6,paint:0,rebuild:0,machine:0,notStarted:0},{type:"Densos",total:3,complete:3,paint:0,rebuild:0,machine:0,notStarted:0},{type:'TSI 7" Check Valves',total:7,complete:5,paint:0,rebuild:2,machine:0,notStarted:0},{type:'FMC 7" Check Valves',total:3,complete:0,paint:0,rebuild:3,machine:0,notStarted:0},{type:"Extension Skids",total:10,complete:3,paint:0,rebuild:7,machine:0,notStarted:0},{type:"Mini Extension Skids",total:4,complete:0,paint:0,rebuild:4,machine:0,notStarted:0},{type:"Complete POD Assembly",total:8,complete:0,paint:0,rebuild:8,machine:0,notStarted:0},{type:"H4",total:8,complete:0,paint:0,rebuild:1,machine:0,notStarted:7},{type:"H3",total:2,complete:0,paint:0,rebuild:0,machine:0,notStarted:2},{type:"Spare H4 Parts",total:1,complete:0,paint:0,rebuild:0,machine:1,notStarted:0}];
-const CALENDAR_EVENTS = [{date:'2026-03-21',fleet:1,customer:'EQT',pad:'Big 177',type:'RD_LOGISTICS'},{date:'2026-03-22',fleet:13,customer:'EQT',pad:'COP - B',type:'RIG_UP'},{date:'2026-04-01',fleet:1,customer:'EQT',pad:'Big 177',type:'RIG_DOWN'},{date:'2026-04-01',fleet:1,customer:'EQT',pad:'Big 177',type:'RD_LOGISTICS'},{date:'2026-04-01',fleet:13,customer:'EQT',pad:'COP - A',type:'RIG_UP'},{date:'2026-04-02',fleet:9,customer:'EOG',pad:'Navy Pad',type:'RD_LOGISTICS'},{date:'2026-04-03',fleet:9,customer:'EOG',pad:'Navy Pad',type:'ROUSTABOUT'},{date:'2026-04-04',fleet:9,customer:'EOG',pad:'Navy Pad',type:'ROUSTABOUT'},{date:'2026-04-04',fleet:9,customer:'EOG',pad:'Navy Pad',type:'RIG_UP'},{date:'2026-04-05',fleet:9,customer:'EOG',pad:'Deersville',type:'RIG_DOWN'},{date:'2026-04-05',fleet:9,customer:'EOG',pad:'Navy Pad',type:'ROUSTABOUT'},{date:'2026-03-30',fleet:1,customer:'EQT',pad:'Big 177',type:'ROUSTABOUT'},{date:'2026-03-31',fleet:1,customer:'EQT',pad:'Big 177',type:'ROUSTABOUT'},{date:'2026-05-09',fleet:15,customer:'NNE',pad:'ERP',type:'RIG_DOWN'},{date:'2026-05-10',fleet:15,customer:'NNE',pad:'ERP',type:'RD_LOGISTICS'},{date:'2026-05-24',fleet:10,customer:'EQT',pad:'LETO',type:'RIG_DOWN'},{date:'2026-06-13',fleet:15,customer:'NNE',pad:'Miracle',type:'RD_LOGISTICS'},{date:'2026-06-15',fleet:15,customer:'NNE',pad:'Miracle',type:'RIG_UP'}];
+/* ═══════════════════════════════════════════════════════════════
+   LIVE DATA CONFIGURATION
+   ═══════════════════════════════════════════════════════════════ */
+const ASSET_SHEET_ID = '1c91kuPxopI-aPNaRQHLgzvdpqHpU5aZqjqqA2sRuXqs';
+const FLEET_SHEET_ID = '1Zc_zAnGEA-EUG-y73cCiU_tvPEYgA-tsWXVTgpV5QFs';
+
+const CSV_URLS = {
+  deployed: `https://docs.google.com/spreadsheets/d/${ASSET_SHEET_ID}/export?format=csv&gid=783802398`,
+  rebuild:  `https://docs.google.com/spreadsheets/d/${ASSET_SHEET_ID}/export?format=csv&gid=1509964271`,
+};
+
+const FLEET_TABS = {
+  '1':  'FLEET+%23+1+-+Brandon+Dock',
+  '6':  'FLEET+%23+6+-+Lindsay+Riley',
+  '9':  'FLEET+%23+9+-+Eric+Cronberg',
+  '10': 'FLEET+%23+10+-+Corey+Miller',
+  '13': 'FLEET+%23+13+-+Ryan+Poorman',
+  '15': 'FLEET+%23+15+-+Jeremy+Bower',
+};
 
 const FLEET_COLORS = {'1':'#0D9488','6':'#2563EB','9':'#7C3AED','10':'#EA580C','13':'#059669','15':'#DC2626'};
-const FLEET_META = {'1':{customer:'EQT',pad:'FRANKLIN DENNY'},'6':{customer:'CNX',pad:'WDTN18'},'9':{customer:'EOG',pad:'DEERSVILLE'},'10':{customer:'EQT',pad:'LETO'},'13':{customer:'EQT',pad:'COP TRACT B'},'15':{customer:'NNE',pad:'ERP'}};
+const FLEET_ORDER = ['1','6','9','10','13','15'];
 
+/* Calendar events — hardcoded (color-coded merged cells cannot be exported via CSV) */
+const CALENDAR_EVENTS = [
+  {date:'2026-03-21',fleet:1,customer:'EQT',pad:'Big 177',type:'RD_LOGISTICS'},
+  {date:'2026-03-22',fleet:13,customer:'EQT',pad:'COP - B',type:'RIG_UP'},
+  {date:'2026-04-01',fleet:1,customer:'EQT',pad:'Big 177',type:'RIG_DOWN'},
+  {date:'2026-04-01',fleet:1,customer:'EQT',pad:'Big 177',type:'RD_LOGISTICS'},
+  {date:'2026-04-01',fleet:13,customer:'EQT',pad:'COP - A',type:'RIG_UP'},
+  {date:'2026-04-02',fleet:9,customer:'EOG',pad:'Navy Pad',type:'RD_LOGISTICS'},
+  {date:'2026-04-03',fleet:9,customer:'EOG',pad:'Navy Pad',type:'ROUSTABOUT'},
+  {date:'2026-04-04',fleet:9,customer:'EOG',pad:'Navy Pad',type:'ROUSTABOUT'},
+  {date:'2026-04-04',fleet:9,customer:'EOG',pad:'Navy Pad',type:'RIG_UP'},
+  {date:'2026-04-05',fleet:9,customer:'EOG',pad:'Deersville',type:'RIG_DOWN'},
+  {date:'2026-04-05',fleet:9,customer:'EOG',pad:'Navy Pad',type:'ROUSTABOUT'},
+  {date:'2026-03-30',fleet:1,customer:'EQT',pad:'Big 177',type:'ROUSTABOUT'},
+  {date:'2026-03-31',fleet:1,customer:'EQT',pad:'Big 177',type:'ROUSTABOUT'},
+  {date:'2026-05-09',fleet:15,customer:'NNE',pad:'ERP',type:'RIG_DOWN'},
+  {date:'2026-05-10',fleet:15,customer:'NNE',pad:'ERP',type:'RD_LOGISTICS'},
+  {date:'2026-05-24',fleet:10,customer:'EQT',pad:'LETO',type:'RIG_DOWN'},
+  {date:'2026-06-13',fleet:15,customer:'NNE',pad:'Miracle',type:'RD_LOGISTICS'},
+  {date:'2026-06-15',fleet:15,customer:'NNE',pad:'Miracle',type:'RIG_UP'},
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   LIVE DATA STATE
+   ═══════════════════════════════════════════════════════════════ */
+let FLEET_EQUIPMENT = {};
+let FLEET_META = {};
+let REBUILD_DATA = [];
+let FLEET_INFO = {};
+
+/* ═══════════════════════════════════════════════════════════════
+   CSV PARSER — handles quoted fields, commas inside quotes, etc.
+   ═══════════════════════════════════════════════════════════════ */
+function parseCSV(text) {
+  const rows = [];
+  let current = '';
+  let inQuotes = false;
+  let row = [];
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < text.length && text[i + 1] === '"') { current += '"'; i++; }
+        else { inQuotes = false; }
+      } else { current += ch; }
+    } else {
+      if (ch === '"') { inQuotes = true; }
+      else if (ch === ',') { row.push(current.trim()); current = ''; }
+      else if (ch === '\n' || ch === '\r') {
+        if (ch === '\r' && i + 1 < text.length && text[i + 1] === '\n') i++;
+        row.push(current.trim());
+        if (row.length > 1 || (row.length === 1 && row[0] !== '')) rows.push(row);
+        row = []; current = '';
+      } else { current += ch; }
+    }
+  }
+  row.push(current.trim());
+  if (row.length > 1 || (row.length === 1 && row[0] !== '')) rows.push(row);
+  return rows;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DATA PARSERS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Parse Deployed Equipment CSV */
+function parseDeployedCSV(csvText) {
+  const rows = parseCSV(csvText);
+  const fleetEquip = {};
+  const fleetMeta = {};
+  let currentFleet = null;
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || row.length < 5) continue;
+
+    /* Detect fleet header rows: col[0] contains "Fleet#N" */
+    const col0 = (row[0] || '').toString();
+    const fleetMatch = col0.match(/Fleet\s*#\s*(\d+)/i);
+    if (fleetMatch) {
+      currentFleet = fleetMatch[1];
+      const parts = col0.split('-');
+      const customer = parts[0] ? parts[0].trim() : '';
+      if (!fleetEquip[currentFleet]) fleetEquip[currentFleet] = [];
+      fleetMeta[currentFleet] = { customer: customer, pad: '' };
+      continue;
+    }
+
+    /* Data rows: col[5]=type name, col[6]=count */
+    if (currentFleet && row.length >= 7) {
+      const typeName = (row[5] || '').toString().trim();
+      const countStr = (row[6] || '').toString().trim();
+      const count = parseInt(countStr, 10);
+      if (typeName && !isNaN(count) && count > 0 && !typeName.match(/^(type|equipment)/i)) {
+        fleetEquip[currentFleet].push({ type: typeName, count: count });
+      }
+    }
+  }
+
+  return { fleetEquip, fleetMeta };
+}
+
+/* Parse Rebuild CSV */
+function parseRebuildCSV(csvText) {
+  const rows = parseCSV(csvText);
+  const rebuildData = [];
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || row.length < 11) continue;
+    const typeName = (row[4] || '').toString().trim();
+    const total = parseInt(row[5], 10);
+    const complete = parseInt(row[6], 10);
+    const paint = parseInt(row[7], 10);
+    const rebuild = parseInt(row[8], 10);
+    const machine = parseInt(row[9], 10);
+    const notStarted = parseInt(row[10], 10);
+    if (typeName && !isNaN(total) && total > 0 &&
+        !typeName.match(/equipment\s*in\s*rebuild/i) && !typeName.match(/^type$/i)) {
+      rebuildData.push({ type: typeName, total, complete, paint, rebuild, machine, notStarted });
+    }
+  }
+  return rebuildData;
+}
+
+/* Parse Fleet Tracker tab CSV */
+function parseFleetTabCSV(csvText, fleetId) {
+  const rows = parseCSV(csvText);
+  const info = {
+    manager: '', email: '', phone: '',
+    currentPad: { customer: '', pad: '', rigDown: '' },
+    upcomingPad: { customer: '', pad: '', rigUp: '' }
+  };
+  if (rows.length < 2) return info;
+
+  const row0 = rows[0] || [];
+  const row1 = rows[1] || [];
+
+  /* Scan row1 for manager name, email, phone */
+  for (let c = 0; c < Math.min(row1.length, 15); c++) {
+    const val = (row1[c] || '').toString().trim();
+    if (val.match(/@/)) info.email = val;
+    if (val.match(/^\d{3}[\.\-]\d{3}[\.\-]\d{4}$/)) info.phone = val;
+  }
+  for (let c = 1; c < Math.min(row1.length, 6); c++) {
+    const val = (row1[c] || '').toString().trim();
+    if (val && !val.match(/@/) && !val.match(/^\d{3}[\.\-]/) && !val.match(/^\d+\/\d+/) && val.length > 2) {
+      info.manager = val; break;
+    }
+  }
+
+  /* Find CURRENT PAD and UPCOMING PAD sections in row0 */
+  let currentIdx = -1, upcomingIdx = -1;
+  for (let c = 0; c < row0.length; c++) {
+    const val = (row0[c] || '').toString().toUpperCase();
+    if (val.includes('CURRENT PAD') || (val.includes('RIG DOWN') && val.includes('CUSTOMER'))) currentIdx = c;
+    if (val.includes('UPCOMING PAD') || (val.includes('RIG UP') && val.includes('CUSTOMER'))) upcomingIdx = c;
+  }
+
+  /* Extract current pad */
+  if (currentIdx >= 0) {
+    const hdr = (row0[currentIdx] || '').toString();
+    /* Look for customer name (3-letter uppercase codes) */
+    for (let c = currentIdx; c < Math.min(currentIdx + 6, row0.length); c++) {
+      const v = (row0[c] || '').toString().trim();
+      if (v && !v.match(/CURRENT|RIG|PAD|CUSTOMER|DOWN|FLEET|UP|UPCOMING/i) && v.length > 1) {
+        if (!info.currentPad.customer && v.match(/^[A-Z]{2,4}$/)) { info.currentPad.customer = v; }
+        else if (!info.currentPad.pad) { info.currentPad.pad = v; }
+      }
+    }
+    for (let c = currentIdx; c < Math.min(currentIdx + 6, row1.length); c++) {
+      const v = (row1[c] || '').toString().trim();
+      if (v.match(/\d+\/\d+/)) { info.currentPad.rigDown = v; break; }
+    }
+  }
+
+  /* Extract upcoming pad */
+  if (upcomingIdx >= 0) {
+    for (let c = upcomingIdx; c < Math.min(upcomingIdx + 6, row0.length); c++) {
+      const v = (row0[c] || '').toString().trim();
+      if (v && !v.match(/CURRENT|RIG|PAD|CUSTOMER|DOWN|FLEET|UP|UPCOMING/i) && v.length > 1) {
+        if (!info.upcomingPad.customer && v.match(/^[A-Z]{2,4}$/)) { info.upcomingPad.customer = v; }
+        else if (!info.upcomingPad.pad) { info.upcomingPad.pad = v; }
+      }
+    }
+    for (let c = upcomingIdx; c < Math.min(upcomingIdx + 6, row1.length); c++) {
+      const v = (row1[c] || '').toString().trim();
+      if (v.match(/\d+\/\d+/)) { info.upcomingPad.rigUp = v; break; }
+    }
+  }
+
+  return info;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DATA FETCHING
+   ═══════════════════════════════════════════════════════════════ */
+async function fetchCSV(url) {
+  /* Add cache-busting parameter */
+  const bustUrl = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+  try {
+    const response = await fetch(bustUrl);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.text();
+  } catch (e1) {
+    /* Fallback: try gviz/tq format if /export format failed */
+    const altUrl = url.replace('/export?format=csv&', '/gviz/tq?tqx=out:csv&') + '&_t=' + Date.now();
+    if (altUrl !== bustUrl) {
+      try {
+        const response = await fetch(altUrl);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.text();
+      } catch (e2) { /* fall through */ }
+    }
+    throw e1;
+  }
+}
+
+async function fetchAllData() {
+  const dot = document.getElementById('status-dot');
+  const ts = document.getElementById('last-updated');
+  dot.className = 'loading-dot';
+  ts.textContent = 'Refreshing...';
+
+  try {
+    /* Build fleet tab URLs */
+    const fleetTabUrls = {};
+    Object.keys(FLEET_TABS).forEach(fid => {
+      fleetTabUrls[fid] = `https://docs.google.com/spreadsheets/d/${FLEET_SHEET_ID}/export?format=csv&sheet=${FLEET_TABS[fid]}`;
+    });
+
+    /* Fetch all data sources in parallel */
+    const promises = [
+      fetchCSV(CSV_URLS.deployed),
+      fetchCSV(CSV_URLS.rebuild),
+      ...Object.keys(fleetTabUrls).map(fid => fetchCSV(fleetTabUrls[fid]).then(csv => ({ fid, csv })))
+    ];
+    const results = await Promise.all(promises);
+
+    /* Parse deployed equipment */
+    const deployedResult = parseDeployedCSV(results[0]);
+    FLEET_EQUIPMENT = deployedResult.fleetEquip;
+    FLEET_META = deployedResult.fleetMeta;
+
+    /* Parse rebuild data */
+    REBUILD_DATA = parseRebuildCSV(results[1]);
+
+    /* Parse fleet tracker tabs */
+    FLEET_INFO = {};
+    for (let i = 2; i < results.length; i++) {
+      const { fid, csv } = results[i];
+      FLEET_INFO[fid] = parseFleetTabCSV(csv, fid);
+      /* Enrich FLEET_META with pad info from fleet tracker */
+      if (FLEET_INFO[fid].currentPad.pad && FLEET_META[fid]) {
+        FLEET_META[fid].pad = FLEET_INFO[fid].currentPad.pad;
+      }
+      if (FLEET_INFO[fid].currentPad.customer && FLEET_META[fid]) {
+        FLEET_META[fid].customer = FLEET_INFO[fid].currentPad.customer || FLEET_META[fid].customer;
+      }
+    }
+
+    /* Render all sections */
+    renderDashboard();
+
+    /* Update timestamp */
+    const now = new Date();
+    ts.textContent = 'Updated: ' + now.toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit', hour12:true });
+    dot.className = 'loading-dot';
+    dot.style.animation = 'none';
+    dot.style.opacity = '1';
+
+    startCountdown();
+
+  } catch (err) {
+    console.error('Fetch error:', err);
+    dot.className = 'loading-dot error';
+    const isLocal = window.location.protocol === 'file:';
+    if (isLocal) {
+      ts.textContent = 'Cannot fetch from file:// — deploy to Netlify first';
+      document.getElementById('countdown').textContent = 'Upload index.html to GitHub to go live';
+    } else {
+      ts.textContent = 'Error loading data — retrying in 60s';
+      document.getElementById('countdown').textContent = 'Sheets may need to be Published to Web';
+      setTimeout(fetchAllData, 60000);
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   5-MINUTE AUTO-REFRESH COUNTDOWN
+   ═══════════════════════════════════════════════════════════════ */
+let countdownInterval = null;
+let countdownSeconds = 300;
+
+function startCountdown() {
+  countdownSeconds = 300;
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = setInterval(() => {
+    countdownSeconds--;
+    const mins = Math.floor(countdownSeconds / 60);
+    const secs = countdownSeconds % 60;
+    document.getElementById('countdown').textContent = `Next refresh in ${mins}:${String(secs).padStart(2, '0')}`;
+    if (countdownSeconds <= 0) {
+      clearInterval(countdownInterval);
+      fetchAllData();
+    }
+  }, 1000);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDERING
+   ═══════════════════════════════════════════════════════════════ */
 Chart.defaults.color = "#64748B";
 Chart.defaults.borderColor = "#E2E8F0";
 
-const tabBtns = document.querySelectorAll('.tab-btn');
-const tabContents = document.querySelectorAll('.tab-content');
 let fleetChartInstance, rebuildChartInstance, availableChartInstance, fleetSummaryChartInstance, distributionChartInstance, progressChartInstance;
 
-tabBtns.forEach(btn => {
-  btn.addEventListener('click', function() {
-    const tabId = this.getAttribute('data-tab');
-    tabBtns.forEach(b => b.classList.remove('active'));
-    tabContents.forEach(c => c.classList.remove('active'));
-    this.classList.add('active');
-    document.getElementById(tabId).classList.add('active');
+function renderDashboard() {
+  renderFleetPills();
+  buildFleetCards();
+  populateRebuildKPIs();
+  populateRebuildTable();
+  populateAvailableTable();
+  renderSummaryKPIs();
+  buildFleetInfoCards();
+  renderCalendar();
+  const activeTab = document.querySelector('.tab-btn.active');
+  if (activeTab) {
+    const tabId = activeTab.getAttribute('data-tab');
     if (tabId === 'deployed') setTimeout(() => initDeployedCharts(), 100);
     else if (tabId === 'rebuild') setTimeout(() => initRebuildCharts(), 100);
     else if (tabId === 'available') setTimeout(() => initAvailableCharts(), 100);
     else if (tabId === 'summary') setTimeout(() => initSummaryCharts(), 100);
-  });
-});
+  }
+}
 
-/* ── Build fleet equipment cards dynamically with colored headers ── */
+function renderFleetPills() {
+  const container = document.getElementById('fleet-pills');
+  container.innerHTML = '';
+  FLEET_ORDER.forEach(fid => {
+    if (!FLEET_EQUIPMENT[fid]) return;
+    const meta = FLEET_META[fid] || { customer:'', pad:'' };
+    const pill = document.createElement('div');
+    pill.className = 'kpi-pill';
+    pill.style.background = `linear-gradient(135deg, ${FLEET_COLORS[fid]}, ${FLEET_COLORS[fid]}dd)`;
+    pill.innerHTML = `Fleet ${fid} &bull; ${meta.customer || '—'} &bull; ${meta.pad || 'TBD'}`;
+    container.appendChild(pill);
+  });
+}
+
 function buildFleetCards() {
   const grid = document.getElementById('fleet-cards-grid');
-  const colorClasses = {'1':'f1','6':'f6','9':'f9','10':'f10','13':'f13','15':'f15'};
-  Object.keys(FLEET_EQUIPMENT).forEach(fleetId => {
-    const meta = FLEET_META[fleetId];
+  grid.innerHTML = '';
+  const cc = {'1':'f1','6':'f6','9':'f9','10':'f10','13':'f13','15':'f15'};
+  FLEET_ORDER.forEach(fid => {
+    if (!FLEET_EQUIPMENT[fid]) return;
+    const meta = FLEET_META[fid] || { customer:'', pad:'' };
     const card = document.createElement('div');
     card.className = 'equip-card';
     let tableRows = '';
-    FLEET_EQUIPMENT[fleetId].forEach(item => {
+    FLEET_EQUIPMENT[fid].forEach(item => {
       tableRows += `<tr><td>${item.type}</td><td class="count-badge">${item.count}</td></tr>`;
     });
-    card.innerHTML = `<div class="equip-card-top fleet-card-top ${colorClasses[fleetId]}"><div><div class="card-title" style="color:#fff;">Fleet ${fleetId}</div><div class="card-subtitle" style="color:rgba(255,255,255,0.8);">${meta.customer} — ${meta.pad}</div></div></div><div class="equip-card-body"><table><tbody>${tableRows}</tbody></table></div>`;
+    card.innerHTML = `<div class="equip-card-top fleet-card-top ${cc[fid]}"><div><div class="card-title" style="color:#fff;">Fleet ${fid}</div><div class="card-subtitle" style="color:rgba(255,255,255,0.8);">${meta.customer || '—'} — ${meta.pad || 'TBD'}</div></div></div><div class="equip-card-body"><table><tbody>${tableRows}</tbody></table></div>`;
     grid.appendChild(card);
   });
 }
 
-/* ── Rebuild table with inline semi-transparent bar graph ── */
+function populateRebuildKPIs() {
+  const c = document.getElementById('rebuild-kpis');
+  const t = REBUILD_DATA.reduce((s,d)=>s+d.total,0);
+  const comp = REBUILD_DATA.reduce((s,d)=>s+d.complete,0);
+  const ip = REBUILD_DATA.reduce((s,d)=>s+d.paint+d.rebuild+d.machine,0);
+  const ns = REBUILD_DATA.reduce((s,d)=>s+d.notStarted,0);
+  c.innerHTML = `
+    <div class="kpi-card"><div class="kpi-value">${t}</div><div class="kpi-label">Total Items</div></div>
+    <div class="kpi-card"><div class="kpi-value">${comp}</div><div class="kpi-label">Completed</div></div>
+    <div class="kpi-card"><div class="kpi-value">${ip}</div><div class="kpi-label">In Progress</div></div>
+    <div class="kpi-card"><div class="kpi-value">${ns}</div><div class="kpi-label">Not Started</div></div>`;
+}
+
 function populateRebuildTable() {
   const tbody = document.getElementById('rebuild-table');
+  tbody.innerHTML = '';
+  if (REBUILD_DATA.length === 0) return;
   const maxTotal = Math.max(...REBUILD_DATA.map(d => d.total));
   REBUILD_DATA.forEach(item => {
     const tr = document.createElement('tr');
     tr.className = 'rebuild-row';
-    const barWidth = (item.total / maxTotal) * 100;
-    const pComplete = item.total > 0 ? (item.complete / item.total * barWidth) : 0;
-    const pPaint = item.total > 0 ? (item.paint / item.total * barWidth) : 0;
-    const pRebuild = item.total > 0 ? (item.rebuild / item.total * barWidth) : 0;
-    const pMachine = item.total > 0 ? (item.machine / item.total * barWidth) : 0;
-    const pNotStarted = item.total > 0 ? (item.notStarted / item.total * barWidth) : 0;
-
+    const bw = (item.total / maxTotal) * 100;
+    const pC = item.total > 0 ? (item.complete / item.total * bw) : 0;
+    const pP = item.total > 0 ? (item.paint / item.total * bw) : 0;
+    const pR = item.total > 0 ? (item.rebuild / item.total * bw) : 0;
+    const pM = item.total > 0 ? (item.machine / item.total * bw) : 0;
+    const pN = item.total > 0 ? (item.notStarted / item.total * bw) : 0;
     tr.innerHTML = `
       <div class="rebuild-bar-bg" style="width:100%;">
-        <div class="rebuild-bar-segment complete" style="width:${pComplete}%"></div>
-        <div class="rebuild-bar-segment paint" style="width:${pPaint}%"></div>
-        <div class="rebuild-bar-segment rebuild" style="width:${pRebuild}%"></div>
-        <div class="rebuild-bar-segment machine" style="width:${pMachine}%"></div>
-        <div class="rebuild-bar-segment notstarted" style="width:${pNotStarted}%"></div>
+        <div class="rebuild-bar-segment complete" style="width:${pC}%"></div>
+        <div class="rebuild-bar-segment paint" style="width:${pP}%"></div>
+        <div class="rebuild-bar-segment rebuild" style="width:${pR}%"></div>
+        <div class="rebuild-bar-segment machine" style="width:${pM}%"></div>
+        <div class="rebuild-bar-segment notstarted" style="width:${pN}%"></div>
       </div>
       <td style="font-weight:600;">${item.type}</td>
       <td style="font-weight:700;">${item.total}</td>
@@ -408,41 +741,105 @@ function populateRebuildTable() {
 
 function populateAvailableTable() {
   const tbody = document.getElementById('available-table');
-  const equipmentTypes = new Set();
-  Object.values(FLEET_EQUIPMENT).forEach(fleet => fleet.forEach(item => equipmentTypes.add(item.type)));
-  equipmentTypes.forEach(type => {
+  tbody.innerHTML = '';
+  const types = new Set();
+  Object.values(FLEET_EQUIPMENT).forEach(fleet => fleet.forEach(item => types.add(item.type)));
+  types.forEach(type => {
     let deployed = 0;
-    Object.values(FLEET_EQUIPMENT).forEach(fleet => {
-      const item = fleet.find(e => e.type === type);
-      if (item) deployed += item.count;
-    });
-    const rebuildItem = REBUILD_DATA.find(e => e.type === type);
-    const inRebuild = rebuildItem ? rebuildItem.total : 0;
-    const available = deployed + inRebuild;
-    if (available > 0) {
+    Object.values(FLEET_EQUIPMENT).forEach(fleet => { const it = fleet.find(e => e.type === type); if (it) deployed += it.count; });
+    const ri = REBUILD_DATA.find(e => e.type === type);
+    const inRebuild = ri ? ri.total : 0;
+    const avail = deployed + inRebuild;
+    if (avail > 0) {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${type}</td><td>${deployed}</td><td>${inRebuild}</td><td class="count-badge">${available}</td>`;
+      tr.innerHTML = `<td>${type}</td><td>${deployed}</td><td>${inRebuild}</td><td class="count-badge">${avail}</td>`;
       tbody.appendChild(tr);
     }
   });
 }
 
+function renderSummaryKPIs() {
+  const c = document.getElementById('summary-kpis');
+  const td = Object.values(FLEET_EQUIPMENT).reduce((s,f)=>s+f.reduce((s2,e)=>s2+e.count,0),0);
+  const tr = REBUILD_DATA.reduce((s,d)=>s+d.total,0);
+  const af = Object.keys(FLEET_EQUIPMENT).length;
+  const custs = new Set();
+  Object.values(FLEET_META).forEach(m => { if (m.customer) custs.add(m.customer); });
+  c.innerHTML = `
+    <div class="kpi-card"><div class="kpi-value">${td}</div><div class="kpi-label">Total Deployed</div></div>
+    <div class="kpi-card"><div class="kpi-value">${tr}</div><div class="kpi-label">In Rebuild</div></div>
+    <div class="kpi-card"><div class="kpi-value">${af}</div><div class="kpi-label">Active Fleets</div></div>
+    <div class="kpi-card"><div class="kpi-value">${custs.size}</div><div class="kpi-label">Active Customers</div></div>`;
+}
+
+function buildFleetInfoCards() {
+  const grid = document.getElementById('fleet-info-grid');
+  grid.innerHTML = '';
+  const cc = {'1':'f1','6':'f6','9':'f9','10':'f10','13':'f13','15':'f15'};
+  const fallback = {
+    '1':  {manager:'Brandon Dock',email:'Brandon.Dock@evolutionws.com',phone:'570.713.5407'},
+    '6':  {manager:'Lindsay Riley',email:'Lindsay.Riley@evolutionws.com',phone:'304.613.0180'},
+    '9':  {manager:'Eric Cronberg',email:'Eric.Cronberg@evolutionws.com',phone:'303.507.3985'},
+    '10': {manager:'Corey Miller',email:'Corey.Miller@evolutionws.com',phone:'346.459.4404'},
+    '13': {manager:'Ryan Poorman',email:'Ryan.Poorman@evolutionws.com',phone:'832.610.4125'},
+    '15': {manager:'Jeremy Bower',email:'jeremy.bower@evolutionws.com',phone:'570.772.9235'},
+  };
+
+  FLEET_ORDER.forEach(fid => {
+    const fi = FLEET_INFO[fid] || {};
+    const fb = fallback[fid] || {};
+    const meta = FLEET_META[fid] || {customer:'',pad:''};
+    const mgr = fi.manager || fb.manager || 'TBD';
+    const email = fi.email || fb.email || '';
+    const phone = fi.phone || fb.phone || '';
+    const curCust = (fi.currentPad && fi.currentPad.customer) || meta.customer || '';
+    const curPad = (fi.currentPad && fi.currentPad.pad) || meta.pad || 'TBD';
+    const curRD = (fi.currentPad && fi.currentPad.rigDown) || 'TBD';
+    const upCust = (fi.upcomingPad && fi.upcomingPad.customer) || meta.customer || '';
+    const upPad = (fi.upcomingPad && fi.upcomingPad.pad) || 'TBD';
+    const upRU = (fi.upcomingPad && fi.upcomingPad.rigUp) || 'TBD';
+
+    const card = document.createElement('div');
+    card.className = 'fleet-card';
+    card.innerHTML = `
+      <div class="fleet-card-top ${cc[fid]}"><div class="fleet-card-header">Fleet ${fid}</div></div>
+      <div class="fleet-card-content">
+        <div class="fleet-manager">
+          <div class="fleet-manager-name">${mgr}</div>
+          <div class="fleet-manager-contact">${email}</div>
+          <div class="fleet-manager-contact">${phone}</div>
+        </div>
+        <div class="fleet-section">
+          <div class="fleet-section-title">Current Pad</div>
+          <div class="fleet-section-value">${curCust} &bull; ${curPad}</div>
+          <div class="fleet-manager-contact">Rig Down: ${curRD}</div>
+        </div>
+        <div class="fleet-section">
+          <div class="fleet-section-title">Upcoming Pad</div>
+          <div class="fleet-section-value">${upCust} &bull; ${upPad}</div>
+          <div class="fleet-manager-contact">Rig Up: ${upRU}</div>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHARTS
+   ═══════════════════════════════════════════════════════════════ */
 function initDeployedCharts() {
   const ctx = document.getElementById('fleet-chart');
   if (!ctx) return;
   if (fleetChartInstance) fleetChartInstance.destroy();
-  const fleetIds = ['1','6','9','10','13','15'];
-  const fleets = fleetIds.map(id => `Fleet ${id}`);
-  const totals = fleetIds.map(id => FLEET_EQUIPMENT[id].reduce((sum,e) => sum+e.count, 0));
-  const colors = fleetIds.map(id => FLEET_COLORS[id]);
-  fleetChartInstance = new Chart(ctx, {type:'bar',data:{labels:fleets,datasets:[{label:'Equipment Count',data:totals,backgroundColor:colors,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#F1F5F9'}}}}});
+  const ids = FLEET_ORDER.filter(id => FLEET_EQUIPMENT[id]);
+  fleetChartInstance = new Chart(ctx, {type:'bar',data:{labels:ids.map(id=>`Fleet ${id}`),datasets:[{label:'Equipment Count',data:ids.map(id=>FLEET_EQUIPMENT[id].reduce((s,e)=>s+e.count,0)),backgroundColor:ids.map(id=>FLEET_COLORS[id]),borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#F1F5F9'}}}}});
 }
 
 function initRebuildCharts() {
   const ctx = document.getElementById('rebuild-chart');
   if (!ctx) return;
   if (rebuildChartInstance) rebuildChartInstance.destroy();
-  const types = REBUILD_DATA.map(d => d.type.length > 18 ? d.type.substring(0, 18) + '...' : d.type);
+  const types = REBUILD_DATA.map(d => d.type.length > 18 ? d.type.substring(0,18)+'...' : d.type);
   rebuildChartInstance = new Chart(ctx, {type:'bar',data:{labels:types,datasets:[
     {label:'Complete',data:REBUILD_DATA.map(d=>d.complete),backgroundColor:'#10B981',borderRadius:4,borderSkipped:false},
     {label:'Paint',data:REBUILD_DATA.map(d=>d.paint),backgroundColor:'#F59E0B',borderRadius:4,borderSkipped:false},
@@ -456,7 +853,9 @@ function initAvailableCharts() {
   const ctx = document.getElementById('available-chart');
   if (!ctx) return;
   if (availableChartInstance) availableChartInstance.destroy();
-  availableChartInstance = new Chart(ctx, {type:'bar',data:{labels:['Deployed','In Rebuild'],datasets:[{label:'Equipment Status',data:[397,252],backgroundColor:['#0D9488','#F97316'],borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#F1F5F9'}}}}});
+  const td = Object.values(FLEET_EQUIPMENT).reduce((s,f)=>s+f.reduce((s2,e)=>s2+e.count,0),0);
+  const tr = REBUILD_DATA.reduce((s,d)=>s+d.total,0);
+  availableChartInstance = new Chart(ctx, {type:'bar',data:{labels:['Deployed','In Rebuild'],datasets:[{label:'Equipment Status',data:[td,tr],backgroundColor:['#0D9488','#F97316'],borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#F1F5F9'}}}}});
 }
 
 function initSummaryCharts() {
@@ -470,85 +869,98 @@ function initSummaryCharts() {
   const topTypes = [...REBUILD_DATA].sort((a,b)=>b.total-a.total).slice(0,8);
   distributionChartInstance = new Chart(ctx1, {type:'doughnut',data:{labels:topTypes.map(d=>d.type),datasets:[{data:topTypes.map(d=>d.total),backgroundColor:['#0D9488','#2563EB','#7C3AED','#EA580C','#059669','#F59E0B','#64748B','#CBD5E1']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
 
-  const completed = REBUILD_DATA.reduce((sum,d)=>sum+d.complete,0);
-  const inProgress = REBUILD_DATA.reduce((sum,d)=>sum+d.paint+d.rebuild+d.machine,0);
-  const notStarted = REBUILD_DATA.reduce((sum,d)=>sum+d.notStarted,0);
-  progressChartInstance = new Chart(ctx2, {type:'doughnut',data:{labels:['Completed','In Progress','Not Started'],datasets:[{data:[completed,inProgress,notStarted],backgroundColor:['#10B981','#F97316','#EF4444']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
+  const comp = REBUILD_DATA.reduce((s,d)=>s+d.complete,0);
+  const ip = REBUILD_DATA.reduce((s,d)=>s+d.paint+d.rebuild+d.machine,0);
+  const ns = REBUILD_DATA.reduce((s,d)=>s+d.notStarted,0);
+  progressChartInstance = new Chart(ctx2, {type:'doughnut',data:{labels:['Completed','In Progress','Not Started'],datasets:[{data:[comp,ip,ns],backgroundColor:['#10B981','#F97316','#EF4444']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
 
-  const fleetIds = ['1','6','9','10','13','15'];
-  const fleets = fleetIds.map(id => `Fleet ${id}`);
-  const fleetTotals = fleetIds.map(id=>FLEET_EQUIPMENT[id].reduce((sum,e)=>sum+e.count,0));
-  const colors = fleetIds.map(id => FLEET_COLORS[id]);
-  fleetSummaryChartInstance = new Chart(ctx3, {type:'bar',data:{labels:fleets,datasets:[{label:'Equipment Count',data:fleetTotals,backgroundColor:colors,borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#F1F5F9'}}}}});
+  const ids = FLEET_ORDER.filter(id => FLEET_EQUIPMENT[id]);
+  fleetSummaryChartInstance = new Chart(ctx3, {type:'bar',data:{labels:ids.map(id=>`Fleet ${id}`),datasets:[{label:'Equipment Count',data:ids.map(id=>FLEET_EQUIPMENT[id].reduce((s,e)=>s+e.count,0)),backgroundColor:ids.map(id=>FLEET_COLORS[id]),borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#F1F5F9'}}}}});
 }
 
-/* ── CALENDAR ── */
-let currentCalendarMonth = new Date(2026, 3, 1);
+/* ═══════════════════════════════════════════════════════════════
+   CALENDAR (hardcoded CALENDAR_EVENTS)
+   ═══════════════════════════════════════════════════════════════ */
+const today = new Date();
+let currentCalendarMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
 function renderCalendar() {
   const year = currentCalendarMonth.getFullYear();
   const month = currentCalendarMonth.getMonth();
-  document.getElementById('calendar-month').textContent = currentCalendarMonth.toLocaleDateString('en-US', {month:'long',year:'numeric'});
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const daysInMonth = lastDay.getDate();
-  const startingDayOfWeek = firstDay.getDay();
+  document.getElementById('calendar-month').textContent = currentCalendarMonth.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const startDow = new Date(year, month, 1).getDay();
+  const adj = startDow === 0 ? 6 : startDow - 1;
   const daysContainer = document.getElementById('calendar-days');
   daysContainer.innerHTML = '';
 
-  const prevMonth = new Date(year, month, 0);
-  const daysInPrevMonth = prevMonth.getDate();
-  for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-    daysContainer.appendChild(createDayElement(daysInPrevMonth - i, true));
-  }
+  const prevDays = new Date(year, month, 0).getDate();
+  for (let i = adj - 1; i >= 0; i--) daysContainer.appendChild(createDayElement(prevDays - i, true));
 
   for (let day = 1; day <= daysInMonth; day++) {
-    const dayEl = createDayElement(day, false);
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    if (dateStr === '2026-04-01') dayEl.classList.add('today');
-    const dayEvents = CALENDAR_EVENTS.filter(e => e.date === dateStr);
-    if (dayEvents.length > 0) {
-      const eventsDiv = dayEl.querySelector('.day-events');
-      dayEvents.forEach(event => {
-        const typeMap = {'RIG_DOWN':'rig-down','RD_LOGISTICS':'rd-logistics','RIG_UP':'rig-up','RU_LOGISTICS':'ru-logistics','ROUSTABOUT':'roustabout'};
+    const el = createDayElement(day, false);
+    const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    if (ds === todayStr) el.classList.add('today');
+    const evts = CALENDAR_EVENTS.filter(e => e.date === ds);
+    if (evts.length > 0) {
+      const ed = el.querySelector('.day-events');
+      evts.forEach(ev => {
+        const tm = {'RIG_DOWN':'rig-down','RD_LOGISTICS':'rd-logistics','RIG_UP':'rig-up','RU_LOGISTICS':'ru-logistics','ROUSTABOUT':'roustabout'};
         const pill = document.createElement('div');
-        pill.className = `event-pill ${typeMap[event.type] || ''}`;
-        pill.textContent = `F${event.fleet} ${event.customer}`;
-        pill.title = `${event.type.replace(/_/g,' ')} - Fleet ${event.fleet} - ${event.customer} ${event.pad}`;
-        eventsDiv.appendChild(pill);
+        pill.className = `event-pill ${tm[ev.type]||''}`;
+        pill.textContent = `F${ev.fleet} ${ev.customer}`;
+        pill.title = `${ev.type.replace(/_/g,' ')} - Fleet ${ev.fleet} - ${ev.customer} ${ev.pad}`;
+        ed.appendChild(pill);
       });
     }
-    daysContainer.appendChild(dayEl);
+    daysContainer.appendChild(el);
   }
 
-  const totalCells = daysContainer.children.length;
-  for (let i = 1; i <= 42 - totalCells; i++) {
-    daysContainer.appendChild(createDayElement(i, true));
-  }
+  const total = daysContainer.children.length;
+  const target = total <= 35 ? 35 : 42;
+  for (let i = 1; i <= target - total; i++) daysContainer.appendChild(createDayElement(i, true));
 }
 
-function createDayElement(day, otherMonth) {
-  const dayEl = document.createElement('div');
-  dayEl.className = `day ${otherMonth ? 'other-month' : ''}`;
-  dayEl.innerHTML = `<div class="day-number">${day}</div><div class="day-events"></div>`;
-  return dayEl;
+function createDayElement(day, other) {
+  const el = document.createElement('div');
+  el.className = `day ${other ? 'other-month' : ''}`;
+  el.innerHTML = `<div class="day-number">${day}</div><div class="day-events"></div>`;
+  return el;
 }
 
 document.getElementById('calendar-prev').addEventListener('click', () => {
-  currentCalendarMonth = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth() - 1);
+  currentCalendarMonth = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth()-1);
   renderCalendar();
 });
 document.getElementById('calendar-next').addEventListener('click', () => {
-  currentCalendarMonth = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth() + 1);
+  currentCalendarMonth = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth()+1);
   renderCalendar();
 });
 
-/* ── INIT ── */
-buildFleetCards();
-populateRebuildTable();
-populateAvailableTable();
-renderCalendar();
-initDeployedCharts();
+/* ═══════════════════════════════════════════════════════════════
+   TAB NAVIGATION
+   ═══════════════════════════════════════════════════════════════ */
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', function() {
+    const tabId = this.getAttribute('data-tab');
+    tabBtns.forEach(b => b.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+    if (tabId === 'deployed') setTimeout(()=>initDeployedCharts(),100);
+    else if (tabId === 'rebuild') setTimeout(()=>initRebuildCharts(),100);
+    else if (tabId === 'available') setTimeout(()=>initAvailableCharts(),100);
+    else if (tabId === 'summary') setTimeout(()=>initSummaryCharts(),100);
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT — fetch live data on page load
+   ═══════════════════════════════════════════════════════════════ */
+fetchAllData();
   </script>
 </body>
 </html>
